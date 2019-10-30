@@ -1,0 +1,83 @@
+//
+//  main.c
+//  ds-2
+//
+//  Created by s20181106115 on 2019/10/15.
+//  Copyright © 2019 imnu. All rights reserved.
+//
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#define maxsize 2
+typedef struct Car
+{
+    char flag;
+    int carnum;
+    int time;
+}Car;
+struct Snode//栈结构体
+{
+    Car* data;
+    int Top;
+    int MaxSize;
+};
+typedef struct Snode * Snode;
+struct Qnode//便道队列结构体
+{
+    int front, rear;
+    int MaxSize;
+};
+Snode CreateStack(int MaxSize)//初始化栈
+{
+    //入口参数栈最大容量MAXSIZE
+    //创建一个给定容量的空堆栈S
+    //出口参数Snode* S
+    Snode S = (struct Snode*)malloc(sizeof(struct Snode));
+    S->data = (Car*)malloc(MaxSize * sizeof(Car));
+    S->Top = -1;
+    S->MaxSize = MaxSize;
+    printf("栈已经初始化好了！\n");
+    return S;
+}
+bool Isfull(Snode S)
+{
+    return (S->Top == S->MaxSize - 1);
+}
+bool Push(Snode S, Car X)
+{
+    if(Isfull(S))
+        return false;
+    else
+    {
+        S->data[++(S->Top)] = X;
+        printf("数据已经入栈了！\n");
+        return true;
+    }
+}
+void Output(Snode S)
+{
+    for(int i = 0; i < maxsize; i++)
+    {
+        printf("%c %d %d %d\n", S->data[i].flag, S->data[i].carnum, S->data[i].time, S->Top);
+    }
+    printf("输出完毕！\n");
+}
+int main()
+{
+    Snode S;
+    Car x[maxsize];
+    S = CreateStack(maxsize);
+    printf("请按顺序输入标识符、汽车的牌照号以及出入时刻：\n");
+    for(int i = 0; i < maxsize; i++)
+    {
+        scanf("%c", &x[i].flag);
+        scanf("%d", &x[i].carnum);
+        scanf("%d", &x[i].time);
+        //scanf("%c,%d,%d", &x[i].flag, &x[i].carnum, &x[i].time);
+        printf("%c,%d,%d\n", x[i].flag, x[i].carnum, x[i].time);
+        Push(S, x[i]);
+    }
+    Output(S);
+    return 0;
+}
