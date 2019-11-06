@@ -1,0 +1,297 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+int location = 0;
+typedef struct Car//汽车结构体
+{
+    int carnum;
+    int time;
+}Car;
+
+struct Snode//栈结构体
+{
+    Car* data;
+    int Top;
+    int MaxSize;
+};
+
+typedef struct Snode * Stack;
+
+struct node//队列中的结点
+{
+    Car data;
+    struct node* next;
+};
+
+typedef struct node* PtrTonode;
+typedef PtrTonode Position;
+
+struct Qnode//队列结构体
+{
+    Position Front, Rear;
+};
+typedef struct Qnode* Queue;
+
+Stack CreateStack(int MaxSize)//初始化栈
+{
+    Stack S = (Stack)malloc(sizeof(struct Snode));
+    S->data = (Car*)malloc(MaxSize * sizeof(Car));
+    S->Top = -1;
+    S->MaxSize = MaxSize;
+    return S;
+}
+
+Queue CreateQueue()//初始化队列
+{
+    Queue Q = (Queue)malloc(sizeof(struct Qnode));
+    Q->Front = (Position)malloc(sizeof(struct node));
+    Q->Rear = (Position)malloc(sizeof(struct node));
+    Q->Front = Q->Rear;
+    Q->Rear->next = NULL;
+    return Q;
+}
+
+bool SIsfull(Stack S)//判断栈是否满
+{
+    return (S->Top == S->MaxSize - 1);
+}
+
+bool Push(Stack S, Car X)//入栈
+{
+    if(SIsfull(S))
+        return false;
+    else
+    {
+        S->data[++(S->Top)] = X;
+        return true;
+    }
+}
+
+bool AddQ(Queue Q, Car X)//入队
+{
+    Position q = (Position)malloc(sizeof(struct node));
+    if(!q)
+        return false;
+    q->data = X;
+    q->next = NULL;
+    Q->Rear->next = q;
+    Q->Rear = q;
+    return true;
+}
+
+bool SIsEmpty(Stack S)//判断栈是否空
+{
+    return (S->Top == -1);
+}
+
+bool DeleteQ(Stack S, Queue Q)//出队
+{
+    Position FrontCell;
+    
+    FrontCell = Q->Front;
+    if(Q->Front == Q->Rear)
+        Q->Front = Q->Rear = NULL;
+    else
+        Q->Front = Q->Front->next;
+    Push(S,Q->Front->data);
+    free(FrontCell);
+    return true;
+    
+}
+
+bool Pop(Stack S)//出栈
+{
+    if(SIsEmpty(S))
+        return false;
+    else
+    {
+        S->data[(S->Top)--];
+        return true;
+    }
+}
+
+float Fee(Car x, Car y)
+{
+    float Money = 0;
+    Money = 0.1*(x.time - y.time);
+    return Money;
+}
+
+void Arrive(Stack S, Queue Q, Car x)
+{
+    if(SIsfull(S))
+    {
+        AddQ(Q,x);
+        location++;
+        printf("停车场已满！您的车辆停于便道 %d 号车位！\n\n", location);
+    }
+    else
+    {
+        Push(S,x);
+        printf("您的车辆停于停车场 %d 号车位！\n\n", S->Top + 1);
+    }
+}
+
+void Depart(Stack S, Queue Q, Stack s, Car x)
+{
+    float Money = 0;
+    if(SIsEmpty(S))
+    {
+        printf("您输入的信息有误！请重新输入！\n");
+    }
+    else
+    {
+        Car y;
+        for(int i = S->Top; i > -1; i--)
+        {
+            y = S->data[i];
+            if(x.carnum != S->data[i].carnum)
+            {
+                Pop(S);
+                Push(s,y);
+            }
+            if(x.carnum == S->data[i].carnum)
+            {
+                Pop(S);
+                Money = Fee(x,y);
+                printf("车牌号为 %d 的车辆已经离开，应缴纳费用 %.2f 元。\n\n", x.carnum, Money);
+            }
+        }
+        for(int i = s->Top; i > -1; i--)
+        {
+            y = s->data[i];
+            Pop(s);
+            Push(S,y);
+        }
+        if(Q->Front != Q->Rear)
+        {
+            DeleteQ(S, Q);
+        }
+    }
+}
+
+void Search(Stack S, Queue Q)
+{
+    if(SIsEmpty(S))
+    {
+        printf("停车场和便道没有停放车辆！请选择其他操作！\n\n");
+    }
+    else
+    {
+        printf("停车场停车情况如下：\n");
+        printf("车牌号     车位\n");
+        for(int i = 0; i < S->Top + 1; i++)
+        {
+            printf("   %d         %d\n",S->data[i].carnum, i + 1);
+        }
+        if(Q->Front == Q->Rear)
+        {
+            printf("便道无车辆停放！\n\n");
+        }
+        else
+        {
+            printf("便道停车情况如下：\n");
+            printf("车牌号     车位\n");
+            Position t;
+            t = Q->Front->next;
+            for(int i = 1; t; i++)
+            {
+                
+                printf("   %d         %d\n", t->data.carnum, i);
+                t = t->next;
+            }
+            printf("\n");
+        }
+    }
+}
+
+int main()
+{
+    int maxsize;
+    printf("**************************************************\n\n");
+    printf("                欢迎使用停车场管理系统！\n");
+    printf("                  请按照提示进行操作！\n");
+    printf("\n**************************************************\n");
+    printf("请输入停车场的最大停车数：\n");
+    scanf("%d", &maxsize);
+    printf("提示：若到达或离开请按照以下格式输入！\n");
+    printf("【命令类型】,车牌号,当前时刻\n\n");
+    printf("A-------车辆到达\n");
+    printf("D-------车辆离开\n");
+    printf("S-------显示当前停车场和便道使用情况\n");
+    printf("E-------退出系统\n\n");
+    Stack S = CreateStack(maxsize);
+    Queue Q = CreateQueue();
+    Stack s = CreateStack(maxsize);
+    Car x;
+    char flag;
+    printf("请按顺序输入命令类型、汽车的牌照号以及出入时刻：\n");
+    getchar();//位置待考察？？？？？
+    while(scanf("%c,%d,%d", &flag, &x.carnum, &x.time) && flag != 'E')
+    {
+//                getchar();
+        switch(flag)
+        {
+            case 'A':
+                Arrive(S, Q, x);
+                break;
+            case 'D':
+                Depart(S, Q, s, x);
+                break;
+            case 'S':
+                Search(S, Q);
+                break;
+        }
+    }
+    printf("感谢您的使用！祝您生活愉快！\n");
+    return 0;
+}
+/*
+测试数据1：
+3
+A,1,5
+A,2,10
+A,3,15
+A,4,20
+A,5,25
+A,6,30
+D,1,35
+D,3,40
+E
+测试数据2：
+3
+A,1,5
+A,2,10
+A,3,15
+D,1,15
+E
+测试数据3：
+3
+A,1,5
+A,2,10
+D,1,15
+A,3,20
+A,4,25
+A,5,30
+D,2,35
+D,4,40
+E
+测试数据4：
+3
+A,1,5
+A,2,10
+A,3,15
+A,4,20
+A,5,25
+A,6,30
+E
+测试数据5：
+3
+D,1,4
+E
+测试数据6：
+2
+S
+E
+*/
+
